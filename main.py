@@ -3,9 +3,12 @@ from sqlalchemy import create_engine, Column, String, DateTime, Integer, func
 from sqlalchemy.dialects.mysql import CHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from pydantic import BaseModel
+from typing import Optional
 import os
 from dotenv import load_dotenv
 import uuid
+from datetime import datetime
 
 load_dotenv()
 
@@ -23,7 +26,8 @@ class Service(Base):
     name = Column(String(255))
     description = Column(String(500))
     image_url = Column(String(500))
-    created_at = Column(DateTime)
+    prefix = Column(String(5))
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class ApiKey(Base):
     __tablename__ = "api_keys"
@@ -37,15 +41,29 @@ class Permission(Base):
     id = Column(Integer, primary_key=True)
     service_id = Column(CHAR(36))
 
+class ServiceCreate(BaseModel):
+    name: str
+    description: str
+    prefix: str
+    image_url: Optional[str] = None
+
+class ServiceResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    prefix: str
+    image_url: Optional[str]
+    created_at: str
+    permissions_count: int
+
 app = FastAPI()
 
 @app.get("/api/as/services", summary="Получить список сервисов")
 def get_services(api_key: str = Header(..., alias="api-key")):
     db = SessionLocal()
     try:
-        # Validate API key
         if not api_key.startswith("as_"):
-            raise HTTPException(status_code=401, detail="API клюс должен начинаться с префикса 'as_'")
+            raise HTTPException(status_code=401, detail="API ключ должен начинаться с префикса 'as_'")
 
         key_record = db.query(ApiKey).filter(ApiKey.api_key == api_key, ApiKey.is_active == 1).first()
         if not key_record:
@@ -59,10 +77,46 @@ def get_services(api_key: str = Header(..., alias="api-key")):
                 "id": s.id,
                 "name": s.name,
                 "description": s.description,
+                "prefix": s.prefix,
                 "image_url": s.image_url,
                 "created_at": s.created_at.strftime('%d.%m.%Y') if s.created_at else None,
                 "permissions_count": permissions_count
             })
         return result
+    finally:
+        db.close()
+
+@app.post("/api/as/services/create", summary="Создать сервис", response_model=ServiceResponse)
+def create_service(service: ServiceCreate, api_key: str = Header(..., alias="api-key")):
+    db = SessionLocal()
+    try:
+        if not api_key.startswith("as_"):
+            raise HTTPException(status_code=401, detail="API ключ должен начинаться с префикса 'as_'")
+
+        key_record = db.query(ApiKey).filter(ApiKey.api_key == api_key, ApiKey.is_active == 1).first()
+        if not key_record:
+            raise HTTPException(status_code=401, detail="Недействительный или неактивный API ключ")
+
+        new_service = Service(
+            name=service.name,
+            description=service.description,
+            prefix=service.prefix,
+            image_url=service.image_url
+        )
+        db.add(new_service)
+        db.commit()
+        db.refresh(new_service)
+
+        permissions_count = db.query(func.count(Permission.id)).filter(Permission.service_id == new_service.id).scalar()
+
+        return ServiceResponse(
+            id=new_service.id,
+            name=new_service.name,
+            description=new_service.description,
+            prefix=new_service.prefix,
+            image_url=new_service.image_url,
+            created_at=new_service.created_at.strftime('%d.%m.%Y') if new_service.created_at else None,
+            permissions_count=permissions_count
+        )
     finally:
         db.close()
