@@ -1,0 +1,65 @@
+from fastapi import APIRouter, Depends, Query, status
+
+from app.database import DbSession
+from app.middleware.auth_middleware import require_permission
+from app.models.user import UserAddRole, UserCreate, UserResponse
+from app.services.user_service import UserService
+
+user_router = APIRouter(prefix="/users", tags=["Users"])
+
+
+@user_router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список пользователей",
+    dependencies=[Depends(require_permission("users", "read_all"))],
+)
+def get(
+    db: DbSession,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+):
+    service = UserService(db)
+    return service.get_all(page, limit)
+
+
+@user_router.get(
+    "/{user_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Получить пользователя по id",
+    dependencies=[Depends(require_permission("users", "read"))],
+)
+def get_by_id(user_id: str, db: DbSession):
+    service = UserService(db)
+    return service.get_by_id(user_id)
+
+
+@user_router.post(
+    "/create",
+    summary="Создать пользователя",
+    response_model=UserResponse,
+    dependencies=[Depends(require_permission("users", "create"))],
+)
+def create(user_data: UserCreate, db: DbSession):
+    service = UserService(db)
+    return service.create(user_data)
+
+
+@user_router.post(
+    "/roles/add",
+    summary="Добавить роль пользователю",
+    dependencies=[Depends(require_permission("users.roles", "edit"))],
+)
+def role_add(user_add_data: UserAddRole, db: DbSession):
+    service = UserService(db)
+    return service.role_add(user_add_data)
+
+
+@user_router.post(
+    "/roles/remove",
+    summary="Удалить роль у пользователя",
+    dependencies=[Depends(require_permission("users.roles", "edit"))],
+)
+def role_remove(user_remove_data: UserAddRole, db: DbSession):
+    service = UserService(db)
+    return service.role_remove(user_remove_data)

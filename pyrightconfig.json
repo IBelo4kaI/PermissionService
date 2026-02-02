@@ -1,0 +1,20 @@
+{
+  "include": [
+    "app"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/venv",
+    "**/.git",
+    "**/.idea",
+    "**/migrations",
+  ],
+  "venvPath": ".",
+  "venv": "venv",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "pythonVersion": "3.14",
+  "typeCheckingMode": "basic",
+  "reportAttributeAccessIssue": false,
+}
