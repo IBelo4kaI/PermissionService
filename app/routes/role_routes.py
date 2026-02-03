@@ -11,7 +11,7 @@ roles_router = APIRouter(prefix="/roles", tags=["Roles"])
 @roles_router.get(
     "",
     summary="Получить список ролей",
-    dependencies=[Depends(require_permission("roles", "read_all"))],
+    dependencies=[Depends(require_permission("roles", "read"))],
 )
 def get_roles(
     db: DbSession,
