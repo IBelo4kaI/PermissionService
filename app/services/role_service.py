@@ -48,7 +48,7 @@ class RoleService:
         if not perm:
             raise HTTPException(status_code=404, detail="Разрешение не найдено")
 
-        if perm in role.permissions:
+        if perm not in role.permissions:
             raise HTTPException(status_code=400, detail="Роль не имеет это разрешение")
 
         role = self.repo.permission_remove(role, perm)

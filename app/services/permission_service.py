@@ -35,6 +35,12 @@ class PermissionService:
         permissions = self.repo.get_by_service_id(page, limit, service_id)
         return [PermissionResponse.model_validate(perm) for perm in permissions]
 
+    def get_by_user_id_and_service_id(
+        self, user_id: str, service_id: str
+    ) -> list[PermissionResponse]:
+        permissions = self.repo.get_by_user_id_and_service_id(user_id, service_id)
+        return [PermissionResponse.model_validate(perm) for perm in permissions]
+
     def create(self, permission_data: PermissionCreate) -> PermissionResponse:
         permission_exist = self.repo.get_by_code(permission_data.code)
         if permission_exist:

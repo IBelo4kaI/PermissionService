@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, Query, status
 
 from app.database import DbSession
-from app.middleware.auth_middleware import require_permission
+from app.middleware.auth_middleware import get_session, require_permission
+from app.models.session import SessionDB
 from app.models.user import UserAddRole, UserCreate, UserResponse
+from app.services.permission_service import PermissionService
 from app.services.user_service import UserService
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
@@ -21,6 +23,28 @@ def get(
 ):
     service = UserService(db)
     return service.get_all(page, limit)
+
+
+@user_router.get(
+    "/me",
+    status_code=status.HTTP_200_OK,
+    summary="Получить пользователя по id",
+    dependencies=[],
+)
+def get_me(db: DbSession, session: SessionDB = Depends(get_session)):
+    service = UserService(db)
+    return service.get_by_id(str(session.user_id))
+
+
+@user_router.get(
+    "/me/permissions/{service_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список разрешений пользователя",
+    dependencies=[],
+)
+def get_me_permissions(service_id: str, db: DbSession, session: SessionDB = Depends(get_session)):
+    service = PermissionService(db)
+    return service.get_by_user_id_and_service_id(str(session.user_id), service_id)
 
 
 @user_router.get(

@@ -1,5 +1,6 @@
 import hashlib
 from datetime import datetime, timezone
+from typing import Annotated
 
 from fastapi import Cookie, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
@@ -41,3 +42,22 @@ def require_permission(entity: str, action: str):
         return session
 
     return dependency
+
+
+def get_session(
+    session_token: str | None = Cookie(default=None, alias="session"),
+    db: Session = Depends(get_db),
+):
+    if not session_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Session token missing"
+        )
+
+    session_repository = SessionRepository(db)
+
+    session = session_repository.get_by_token(session_token)
+
+    if not session:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session")
+
+    return session

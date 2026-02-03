@@ -8,7 +8,9 @@ from generated.auth_pb2_grpc import PermissionServiceServicer
 
 
 class PermissionGrpcService(PermissionServiceServicer):
-    def ValidatePermission(self, request: PermissionRequest, context) -> PermissionResponse:
+    def ValidatePermission(
+        self, request: PermissionRequest, context: grpc.ServicerContext
+    ) -> PermissionResponse:
         """
         Валидация разрешений пользователя
 

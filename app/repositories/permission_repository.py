@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.permission import Permission, PermissionCreate
@@ -46,6 +47,42 @@ class PermissionRepository:
             .distinct()
             .all()
         )
+        return permissions
+
+    def get_by_user_id_and_service_id(self, user_id: str, service_id: str) -> list[Permission]:
+        """
+        Возвращает все разрешения пользователя для конкретного сервиса.
+        Учитывает wildcard разрешения типа "all:all:all", "api:all:all" и т.д.
+        """
+        # Получаем имя сервиса по его ID
+        service = self.db.query(Service).filter(Service.id == service_id).first()
+        if not service:
+            return []
+
+        service_name = service.name
+
+        permissions = (
+            self.db.query(Permission)
+            .join(Permission.roles)
+            .join(Role.users)
+            .filter(User.id == user_id)
+            .filter(
+                or_(
+                    # Разрешения, привязанные к текущему сервису
+                    Permission.service_id == service_id,
+                    # Wildcard разрешения, которые покрывают этот сервис
+                    or_(
+                        # Разрешения, начинающиеся с имени сервиса и двоеточия
+                        Permission.code.startswith(f"{service_name}:"),
+                        # Разрешения, начинающиеся с "all:"
+                        Permission.code.startswith("all:"),
+                    ),
+                )
+            )
+            .distinct()
+            .all()
+        )
+
         return permissions
 
     def exist_by_user_id(self, user_id: str, service: str, entity: str, action: str) -> bool:
