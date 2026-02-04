@@ -44,7 +44,7 @@ class ServiceResponse(ServiceBase):
     id: str = Field()
     service_name: str = Field(alias="name")
     created_at: datetime = Field()
-    permissions: list[PermissionBase] | None = Field(exclude=True)
+    permissions: list['PermissionBase'] | None = Field(exclude=True)
 
     @computed_field
     def permissions_count(self) -> int:
