@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.models.role import Role
+from app.models.session import SessionDB
 from app.models.user import User, UserCreate
 from app.utils.pagination_utils import Page, paginate
 
@@ -26,6 +27,28 @@ class UserRepository:
         self.db.add(user)
         self.db.commit()
         self.db.refresh(user)
+        return user
+
+    def delete(self, user_id: str):
+        """Удаляет пользователя по ID"""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user:
+            # Сначала удаляем сессии пользователя, иначе FK (sessions.user_id -> users.id) блокирует удаление.
+            self.db.query(SessionDB).filter(SessionDB.user_id == user_id).delete(
+                synchronize_session=False
+            )
+            self.db.delete(user)
+            self.db.commit()
+        return user
+
+    def update(self, user_id: str, user_data):
+        """Обновляет пользователя по ID"""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user:
+            for field, value in user_data.model_dump(exclude_unset=True).items():
+                setattr(user, field, value)
+            self.db.commit()
+            self.db.refresh(user)
         return user
 
     def role_add(self, user: User, role_data: Role):

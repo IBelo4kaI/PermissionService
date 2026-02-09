@@ -53,3 +53,24 @@ def get_permissions_by_service_id(
 def create_permission(permission_data: PermissionCreate, db: DbSession):
     service = PermissionService(db)
     return service.create(permission_data)
+
+
+@perm_router.put(
+    "/{permission_id}",
+    response_model=PermissionResponse,
+    summary="Редактировать разрешение",
+    dependencies=[Depends(require_permission("perm", "update"))],
+)
+def update_permission(permission_id: str, permission_data: PermissionCreate, db: DbSession):
+    service = PermissionService(db)
+    return service.update(permission_id, permission_data)
+
+
+@perm_router.delete(
+    "/{permission_id}",
+    summary="Удалить разрешение",
+    dependencies=[Depends(require_permission("perm", "delete"))],
+)
+def delete_permission(permission_id: str, db: DbSession):
+    service = PermissionService(db)
+    return service.delete(permission_id)

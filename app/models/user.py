@@ -57,6 +57,17 @@ class UserResponse(UserBase):
         from_attributes = True
 
 
+class UserUpdate(BaseModel):
+    name: str | None = Field(default=None)
+    surname: str | None = Field(default=None)
+    patronymic: str | None = Field(default=None)
+    username: str | None = Field(default=None)
+    birthday: datetime | None = Field(default=None)
+    status: str | None = Field(default=None)
+    gender_id: int | None = Field(default=None)
+    password: str | None = Field(default=None)
+
+
 class UserAddRole(BaseModel):
     user_id: str = Field()
     role_id: str = Field()

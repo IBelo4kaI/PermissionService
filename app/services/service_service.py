@@ -1,6 +1,8 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.models import ServiceCreate, ServiceResponse
+from app.models.service import ServiceAccessResponse
 from app.repositories.service_repository import ServiceRepository
 from app.utils.pagination_utils import PageResponse
 
@@ -23,3 +25,13 @@ class ServiceService:
     def create(self, service_date: ServiceCreate) -> ServiceResponse:
         service = self.repo.create(service_date)
         return ServiceResponse.model_validate(service)
+
+    def update(self, service_id: str, service_data: ServiceCreate) -> ServiceResponse:
+        service = self.repo.update(service_id, service_data)
+        if not service:
+            raise HTTPException(status_code=404, detail="Сервис не найден")
+        return ServiceResponse.model_validate(service)
+
+    def get_services_by_user_roles(self, user_id: str):
+        services = self.repo.get_services_by_user_roles(user_id)
+        return [ServiceAccessResponse.model_validate(service) for service in services]

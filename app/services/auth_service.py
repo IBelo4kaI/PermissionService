@@ -44,3 +44,8 @@ class AuthService:
         self.repo_session.create(session_create)
 
         return (token, expires_at)
+
+    def validate_session(self, token: str):
+        """Проверяет действительность сессии по токену"""
+        session = self.repo_session.get_by_token(token)
+        return session is not None

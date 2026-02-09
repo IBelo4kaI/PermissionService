@@ -143,3 +143,19 @@ class PermissionRepository:
         self.db.refresh(permission)
         permission.service_name = permission.service.name
         return permission
+
+    def update(self, permission_id: str, permission_data: PermissionCreate) -> Permission | None:
+        permission = self.db.query(Permission).filter(Permission.id == permission_id).first()
+        if permission:
+            for field, value in permission_data.model_dump().items():
+                setattr(permission, field, value)
+            self.db.commit()
+            self.db.refresh(permission)
+        return permission
+
+    def delete(self, permission_id: str) -> Permission | None:
+        permission = self.db.query(Permission).filter(Permission.id == permission_id).first()
+        if permission:
+            self.db.delete(permission)
+            self.db.commit()
+        return permission

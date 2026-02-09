@@ -19,6 +19,8 @@ class Service(Base):
     name = Column(String(255))
     description = Column(String(500))
     image_url = Column(String(500))
+    url = Column(String(500))
+    theme = Column(String(100))
     prefix = Column(String(5))
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -30,6 +32,8 @@ class ServiceBase(BaseModel):
     name: str = Field(max_length=100)
     description: str = Field()
     image_url: str | None = Field(default=None)
+    url: str | None = Field(default=None)
+    theme: str | None = Field(default=None)
     prefix: str = Field(max_length=5)
 
     class Config:
@@ -48,4 +52,16 @@ class ServiceResponse(ServiceBase):
 
     @computed_field
     def permissions_count(self) -> int:
-        return len(self.permissions) if self.permissions else 0  # pyright: ignore[reportArgumentType]
+        return len(self.permissions) if self.permissions else 0
+
+
+class ServiceAccessResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    image_url: str | None
+    url: str | None
+    theme: str | None
+
+    class Config:
+        from_attributes = True

@@ -50,3 +50,24 @@ class PermissionService:
 
         permission = self.repo.create(permission_data)
         return PermissionResponse.model_validate(permission)
+
+    def update(self, permission_id: str, permission_data: PermissionCreate) -> PermissionResponse:
+        permission = self.repo.get_by_id(permission_id)
+        if not permission:
+            raise HTTPException(status_code=404, detail="Разрешение не найдено")
+
+        if permission_data.code != permission.code:
+            permission_exist = self.repo.get_by_code(permission_data.code)
+            if permission_exist and permission_exist.id != permission_id:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, "Разрешение с таким кодом уже существует"
+                )
+
+        updated = self.repo.update(permission_id, permission_data)
+        return PermissionResponse.model_validate(updated)
+
+    def delete(self, permission_id: str):
+        permission = self.repo.delete(permission_id)
+        if not permission:
+            raise HTTPException(status_code=404, detail="Разрешение не найдено")
+        return {"message": "Разрешение успешно удалено"}

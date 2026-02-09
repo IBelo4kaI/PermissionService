@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, status
 from app.database import DbSession
 from app.middleware.auth_middleware import get_session, require_permission
 from app.models.session import SessionDB
-from app.models.user import UserAddRole, UserCreate, UserResponse
+from app.models.user import UserAddRole, UserCreate, UserResponse, UserUpdate
 from app.services.permission_service import PermissionService
 from app.services.user_service import UserService
 
@@ -56,6 +56,27 @@ def get_me_permissions(service_id: str, db: DbSession, session: SessionDB = Depe
 def get_by_id(user_id: str, db: DbSession):
     service = UserService(db)
     return service.get_by_id(user_id)
+
+
+@user_router.put(
+    "/{user_id}",
+    summary="Обновить пользователя",
+    response_model=UserResponse,
+    dependencies=[Depends(require_permission("users", "update"))],
+)
+def update_user(user_id: str, user_data: UserUpdate, db: DbSession):
+    service = UserService(db)
+    return service.update(user_id, user_data)
+
+
+@user_router.delete(
+    "/{user_id}",
+    summary="Удалить пользователя",
+    dependencies=[Depends(require_permission("users", "delete"))],
+)
+def delete_user(user_id: str, db: DbSession):
+    service = UserService(db)
+    return service.delete(user_id)
 
 
 @user_router.post(

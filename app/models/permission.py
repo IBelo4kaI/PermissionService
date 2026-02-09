@@ -48,3 +48,35 @@ class PermissionResponse(PermissionBase):
     @computed_field
     def service_name(self) -> str:
         return self.service.name if self.service else ""
+
+
+class PermissionWithUse(BaseModel):
+    id: str
+    service_id: str | None
+    code: str
+    name: str
+    description: str
+    created_at: str  # будет в формате dd.mm.yyyy HH:MM
+    service_name: str | None
+    use: bool  # используется ли разрешение в данной роли
+
+
+class UserRoleInfo(BaseModel):
+    id: str
+    name: str
+    surname: str
+    username: str
+
+
+class RoleDetailedResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    is_global: int
+    created_at: str  # будет в формате dd.mm.yyyy HH:MM
+    used_permissions_count: int  # количество разрешений с use: true
+    permissions_by_service: dict[str, list[PermissionWithUse]]  # группировка по service_id
+    users: list[UserRoleInfo]  # пользователи, имеющие эту роль
+
+    class Config:
+        from_attributes = True

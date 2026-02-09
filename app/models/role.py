@@ -59,10 +59,8 @@ class RoleResponse(RoleBase):
     service_name: str | None = Field(default=None)
     created_at: datetime = Field()
     permissions: list["PermissionBase"] | None = Field(exclude=True)
-
-    @computed_field
-    def permissions_count(self) -> int:
-        return len(self.permissions) if self.permissions else 0  # pyright: ignore[reportArgumentType]
+    user_count: int = Field(default=0)  # количество пользователей с этой ролью
+    permissions_count: int = Field(default=0)  # количество разрешений для этой роли
 
     class Config:
         from_attributes = True
