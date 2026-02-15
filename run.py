@@ -9,7 +9,11 @@ import grpc
 import uvicorn
 
 from app.services.permission_grpc_service import PermissionGrpcService
-from generated.auth_pb2_grpc import add_PermissionServiceServicer_to_server
+from app.services.user_grpc_service import UserGrpcService
+from generated.permission_pb2_grpc import (
+    add_PermissionServiceServicer_to_server,
+    add_UserServiceServicer_to_server,
+)
 
 
 def run_grpc_server():
@@ -18,6 +22,7 @@ def run_grpc_server():
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     add_PermissionServiceServicer_to_server(PermissionGrpcService(), server)
+    add_UserServiceServicer_to_server(UserGrpcService(), server)
     server.add_insecure_port("0.0.0.0:8383")
 
     server.start()

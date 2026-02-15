@@ -3,8 +3,8 @@ import grpc
 from app.database import get_db
 from app.repositories.permission_repository import PermissionRepository
 from app.repositories.session_repository import SessionRepository
-from generated.auth_pb2 import PermissionRequest, PermissionResponse
-from generated.auth_pb2_grpc import PermissionServiceServicer
+from generated.permission_pb2 import PermissionRequest, PermissionResponse
+from generated.permission_pb2_grpc import PermissionServiceServicer
 
 
 class PermissionGrpcService(PermissionServiceServicer):
@@ -37,17 +37,37 @@ class PermissionGrpcService(PermissionServiceServicer):
                     code=401,
                 )
 
-            exist = perm_repo.exist_by_user_id(
-                str(session.user_id),
-                request.service,
-                request.entity,
-                request.action,
-            )
+            exist = False
+
+            if request.user_id and str(session.user_id) != request.user_id:
+                exist = perm_repo.exist_by_user_id(
+                    str(session.user_id),
+                    request.service,
+                    request.entity + ".all",
+                    request.action,
+                )
+            else:
+                exist = perm_repo.exist_by_user_id(
+                    str(session.user_id),
+                    request.service,
+                    request.entity,
+                    request.action,
+                )
 
             if not exist:
-                return PermissionResponse(is_access=False, message="Нет разрешения", code=403)
+                return PermissionResponse(
+                    is_access=False,
+                    message="Нет разрешения",
+                    code=403,
+                    user_id=str(session.user_id),
+                )
 
-            return PermissionResponse(is_access=True, message="Разрешение получено", code=200)
+            return PermissionResponse(
+                is_access=True,
+                message="Разрешение получено",
+                code=200,
+                user_id=str(session.user_id),
+            )
 
         except StopIteration:
             # Не удалось получить сессию БД

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package generated.permission;
+
+option go_package = "TimeTrackBackend/internal/adapter/grpc";
+
+message PermissionRequest {
+    string session_token = 1;
+    string service = 2;
+    string entity = 3;
+    string action = 4;
+    optional string user_id = 5;
+}
+
+message PermissionResponse {
+    bool is_access = 1;
+    string message = 2;
+    string user_id= 4;
+    int32 code = 3;
+}
+
+message GetUsersRequest {
+    PermissionRequest permission_request = 1;
+    bool only_active = 2;
+}
+
+message UserResponse {
+    string id = 1;
+    string name = 2;
+    string surname = 3;
+}
+
+message GetUsersResponse {
+    repeated UserResponse users = 1;
+    optional string message = 2;
+    int32 code = 3;
+}
+
+service PermissionService {
+    rpc ValidatePermission(PermissionRequest) returns (PermissionResponse);
+}
+
+service UserService {
+    rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);
+}

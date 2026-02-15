@@ -26,6 +26,19 @@ def get(
 
 
 @user_router.get(
+    "/all",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список пользователей без пагинации",
+    dependencies=[Depends(require_permission("users", "read_all"))],
+)
+def getWithoutLimits(
+    db: DbSession,
+):
+    service = UserService(db)
+    return service.get_all_without_limits()
+
+
+@user_router.get(
     "/me",
     status_code=status.HTTP_200_OK,
     summary="Получить пользователя по id",

@@ -7,6 +7,6 @@ protoc.main(
         "--python_out=./generated",
         "--grpc_python_out=./generated",
         "--pyi_out=./generated",
-        "./proto/auth.proto",
+        "./proto/permission.proto",
     )
 )

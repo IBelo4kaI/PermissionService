@@ -14,6 +14,10 @@ class UserRepository:
         users = self.db.query(User)
         return paginate(users, page, limit)
 
+    def get_all_without_pages(self) -> list[User]:
+        users = self.db.query(User)
+        return users.all()
+
     def get_by_id(self, user_id: str) -> User | None:
         user = self.db.query(User).filter(User.id == user_id).first()
         return user
