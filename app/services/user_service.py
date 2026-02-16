@@ -26,6 +26,19 @@ class UserService:
             pages=page_data.pages,
         )
 
+    def get_all_by_service_id(
+        self, service_id: str, page: int = 1, limit: int = 10
+    ) -> PageResponse[UserResponse]:
+        page_data = self.repo.get_by_service_id(page, limit, service_id)
+
+        return PageResponse(
+            items=[UserResponse.model_validate(u) for u in page_data.items],
+            total=page_data.total,
+            page=page_data.page,
+            limit=page_data.limit,
+            pages=page_data.pages,
+        )
+
     def get_all_without_limits(self) -> list[UserResponse]:
         users = self.repo.get_all_without_pages()
         return [UserResponse.model_validate(u) for u in users]

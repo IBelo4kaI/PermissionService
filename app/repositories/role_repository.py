@@ -52,6 +52,44 @@ class RoleRepository:
         )
         
         return paginate(query, page, limit)
+
+    def get_all_with_counts_by_service_id(self, page: int, limit: int, service_id: str):
+        """Получает страницу ролей по service_id с количеством пользователей и разрешений"""
+        from sqlalchemy import func
+        from app.models.user_roles import UserRole
+        from app.models.role import RolePermission
+
+        user_counts = (
+            self.db.query(
+                UserRole.role_id,
+                func.count(UserRole.user_id).label('user_count')
+            )
+            .group_by(UserRole.role_id)
+            .subquery()
+        )
+
+        perm_counts = (
+            self.db.query(
+                RolePermission.role_id,
+                func.count(RolePermission.permission_id).label('permission_count')
+            )
+            .group_by(RolePermission.role_id)
+            .subquery()
+        )
+
+        query = (
+            self.db.query(
+                Role,
+                func.coalesce(user_counts.c.user_count, 0).label('user_count'),
+                func.coalesce(perm_counts.c.permission_count, 0).label('permission_count')
+            )
+            .select_from(Role)
+            .outerjoin(user_counts, Role.id == user_counts.c.role_id)
+            .outerjoin(perm_counts, Role.id == perm_counts.c.role_id)
+            .filter(Role.service_id == service_id)
+        )
+
+        return paginate(query, page, limit)
     
     def get_all(self, page: int, limit: int) -> Page[Role]:
         roles = self.db.query(Role)

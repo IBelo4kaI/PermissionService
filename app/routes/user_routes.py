@@ -26,6 +26,22 @@ def get(
 
 
 @user_router.get(
+    "/service/{service_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список пользователей по service_id",
+    dependencies=[Depends(require_permission("users", "read_all"))],
+)
+def get_by_service_id(
+    service_id: str,
+    db: DbSession,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+):
+    service = UserService(db)
+    return service.get_all_by_service_id(service_id, page, limit)
+
+
+@user_router.get(
     "/all",
     status_code=status.HTTP_200_OK,
     summary="Получить список пользователей без пагинации",

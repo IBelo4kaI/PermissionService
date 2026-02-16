@@ -26,6 +26,17 @@ class UserRepository:
         user = self.db.query(User).filter(User.username == username).first()
         return user
 
+    def get_by_service_id(self, page: int, limit: int, service_id: str) -> Page[User]:
+        from app.models.role import Role
+
+        users = (
+            self.db.query(User)
+            .join(User.roles)
+            .filter(Role.service_id == service_id)
+            .distinct()
+        )
+        return paginate(users, page, limit)
+
     def create(self, user_data: UserCreate) -> User:
         user = User(**user_data.model_dump())
         self.db.add(user)

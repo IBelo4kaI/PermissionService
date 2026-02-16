@@ -23,6 +23,21 @@ def get_roles(
     return service.get_all(page, limit)
 
 
+@roles_router.get(
+    "/service/{service_id}",
+    summary="Получить список ролей по service_id",
+    dependencies=[Depends(require_permission("roles", "read"))],
+)
+def get_roles_by_service_id(
+    service_id: str,
+    db: DbSession,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+):
+    service = RoleService(db)
+    return service.get_all_by_service_id(service_id, page, limit)
+
+
 @roles_router.post(
     "/perm/add",
     summary="Добавить разрешение для роли",

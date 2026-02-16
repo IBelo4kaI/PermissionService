@@ -52,6 +52,41 @@ class RoleService:
             pages=page_data.pages,
         )
 
+    def get_all_by_service_id(
+        self, service_id: str, page: int, limit: int
+    ) -> PageResponse[RoleResponse]:
+        page_data = self.repo.get_all_with_counts_by_service_id(page, limit, service_id)
+
+        items = []
+        for item in page_data.items:
+            if hasattr(item, 'Role'):
+                role_data = item.Role
+                user_count = item.user_count
+                permission_count = item.permission_count
+            else:
+                role_data = item
+                user_count = 0
+                permission_count = 0
+
+            role_dict = {}
+            for column in role_data.__table__.columns:
+                role_dict[column.name] = getattr(role_data, column.name)
+
+            role_dict['permissions'] = []
+            role_dict['user_count'] = user_count
+            role_dict['permissions_count'] = permission_count
+
+            role_response = RoleResponse.model_validate(role_dict)
+            items.append(role_response)
+
+        return PageResponse(
+            items=items,
+            total=page_data.total,
+            page=page_data.page,
+            limit=page_data.limit,
+            pages=page_data.pages,
+        )
+
     def permission_add(self, permission_add_data: RoleAddPermission):
         role = self.repo.get_by_id(permission_add_data.role_id)
         if not role:
