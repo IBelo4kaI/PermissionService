@@ -15,13 +15,12 @@ def login(
     service = AuthService(db)
     result = service.login(login)
     # Делает cookie доступной для всех поддоменов *.st29.ru и для основного домена.
-    # TODO: Вернуть домен
     response.set_cookie(
         "session",
         result[0],
         expires=result[1],
         httponly=True,
-        domain="192.168.88.147",
+        domain=".st29.ru",
         path="/",
     )
 
