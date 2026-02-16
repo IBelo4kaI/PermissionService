@@ -31,8 +31,17 @@ class UserService:
     ) -> PageResponse[UserResponse]:
         page_data = self.repo.get_by_service_id(page, limit, service_id)
 
+        items = []
+        for user in page_data.items:
+            user_response = UserResponse.model_validate(user)
+            # Оставляем только роли для данного service_id
+            user_response.roles = [
+                role for role in user_response.roles if role.service_id == service_id
+            ]
+            items.append(user_response)
+
         return PageResponse(
-            items=[UserResponse.model_validate(u) for u in page_data.items],
+            items=items,
             total=page_data.total,
             page=page_data.page,
             limit=page_data.limit,
